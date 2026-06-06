@@ -20,9 +20,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Requirement 8.7: фиксация точной версии Xcode.
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
+      # Requirement 8.7: фиксация версии Xcode (берём самый свежий Xcode 16,
+      # т.к. в Xcode 16.2 есть баг actool "No simulator runtime version").
+      - name: Select latest Xcode 16
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$LATEST" ]; then
+            echo "::error::No Xcode 16 found on runner"; exit 1
+          fi
+          echo "Selecting $LATEST"
+          sudo xcode-select -switch "$LATEST/Contents/Developer"
 
       - name: Show tool versions
         run: |
