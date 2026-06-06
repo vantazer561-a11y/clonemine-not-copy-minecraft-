@@ -250,7 +250,8 @@ final class Renderer: NSObject, MTKViewDelegate {
             let model = makeTranslationScale(translation: origin, scale: s)
             var eu = EntityUniforms(mvp: uniforms.viewProjection * model,
                                     color: animal.kind.color,
-                                    sunDir: uniforms.sunDir)            enc.setVertexBytes(&eu, length: MemoryLayout<EntityUniforms>.stride, index: 1)
+                                    sunDir: uniforms.sunDir)
+            enc.setVertexBytes(&eu, length: MemoryLayout<EntityUniforms>.stride, index: 1)
             enc.setFragmentBytes(&eu, length: MemoryLayout<EntityUniforms>.stride, index: 1)
             enc.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: CubeMesh.vertices.count)
         }
