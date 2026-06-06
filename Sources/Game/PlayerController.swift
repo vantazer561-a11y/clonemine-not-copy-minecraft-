@@ -17,7 +17,15 @@ public final class PlayerController {
     public static let moveSpeed: Float = 4.0      // блоков/сек (Req 3.1)
     public static let gravity: Float = 24.0       // блоков/сек^2 (Req 3.3)
     public static let jumpSpeed: Float = 8.0      // даёт подъём ~1.3 блока (Req 3.5)
-    public static let lookSensitivity: Float = 0.005
+    public static let baseLookSensitivity: Float = 0.005
+
+    /// Множитель чувствительности обзора (настраивается игроком).
+    public var lookSensitivity: Float = 1.0
+    /// Инверсия вертикальной оси обзора.
+    public var invertY: Bool = false
+    /// Режим бега (ускоренное перемещение).
+    public var sprinting: Bool = false
+    public static let sprintMultiplier: Float = 1.7
 
     public init(position: SIMD3<Float> = SIMD3<Float>(0, 80, 0)) {
         self.position = position
@@ -29,8 +37,10 @@ public final class PlayerController {
 
     /// Поворот камеры пропорционально перетаскиванию; pitch ограничен [-90°,+90°] (Req 3.2, 3.6).
     public func applyLook(delta: SIMD2<Float>) {
-        yaw += delta.x * PlayerController.lookSensitivity
-        pitch -= delta.y * PlayerController.lookSensitivity
+        let s = PlayerController.baseLookSensitivity * lookSensitivity
+        yaw += delta.x * s
+        let pitchSign: Float = invertY ? 1 : -1
+        pitch += pitchSign * delta.y * s
         let limit = Float.pi / 2
         pitch = max(-limit, min(limit, pitch))
     }
@@ -42,7 +52,8 @@ public final class PlayerController {
         let right = SIMD3<Float>(sin(yaw - .pi / 2), 0, cos(yaw - .pi / 2))
         var wish = forward * moveInput.y + right * moveInput.x
         if simd_length(wish) > 1 { wish = simd_normalize(wish) }
-        let horizontal = wish * PlayerController.moveSpeed
+        let speed = PlayerController.moveSpeed * (sprinting ? PlayerController.sprintMultiplier : 1)
+        let horizontal = wish * speed
 
         velocity.x = horizontal.x
         velocity.z = horizontal.z

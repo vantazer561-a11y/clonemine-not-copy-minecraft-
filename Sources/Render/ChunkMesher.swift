@@ -42,9 +42,10 @@ public enum ChunkMesher {
                         let ny = y + Int(face.normal.y)
                         let nz = wz + Int(face.normal.z)
                         let neighbor = world.block(at: BlockCoord(nx, ny, nz))
-                        // Грань видна, если сосед не твёрдый (face culling)
-                        if neighbor.isSolid { continue }
-                        if type == .water && neighbor == .water { continue }
+                        // Грань скрыта, если сосед — непрозрачный твёрдый блок,
+                        // либо тот же прозрачный тип (внутренние грани листвы/воды).
+                        if neighbor.isSolid && !neighbor.isTransparent { continue }
+                        if neighbor == type { continue }
                         appendFace(&mesh, origin: origin, face: face, color: type.color)
                     }
                 }
@@ -57,14 +58,12 @@ public enum ChunkMesher {
                                    face: (normal: SIMD3<Float>, corners: [SIMD3<Float>]),
                                    color: SIMD4<Float>) {
         let base = UInt32(mesh.vertices.count)
-        // Простое затенение по нормали для читаемости граней.
-        let shade = 0.65 + 0.35 * max(0, simd_dot(simd_normalize(face.normal),
-                                                   simd_normalize(SIMD3<Float>(0.4, 1, 0.3))))
-        let shaded = SIMD4<Float>(color.x * shade, color.y * shade, color.z * shade, color.w)
+        // Базовый цвет передаётся как есть; освещение (солнце/амбиент/туман)
+        // вычисляется пофрагментно в шейдере по нормали.
         for c in face.corners {
             mesh.vertices.append(VoxelVertex(position: origin + c,
                                              normal: face.normal,
-                                             color: shaded))
+                                             color: color))
         }
         mesh.indices.append(contentsOf: [base, base + 1, base + 2, base, base + 2, base + 3])
     }

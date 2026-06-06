@@ -95,6 +95,53 @@ public struct TerrainGenerator {
                 }
             }
         }
+
+        placeTrees(into: &blocks, coord: coord, waterLevel: waterLevel)
         return blocks
+    }
+
+    /// Детерминированное размещение деревьев (ствол + крона) на травяных столбцах.
+    private func placeTrees(into blocks: inout ChunkBlocks, coord: ChunkCoord, waterLevel: Int) {
+        let baseX = coord.x * WorldConfig.chunkSizeX
+        let baseZ = coord.y * WorldConfig.chunkSizeZ
+        // Отступаем от краёв, чтобы крона помещалась внутри чанка.
+        for lx in 2..<(WorldConfig.chunkSizeX - 2) {
+            for lz in 2..<(WorldConfig.chunkSizeZ - 2) {
+                let wx = baseX + lx
+                let wz = baseZ + lz
+                let h = surfaceHeight(worldX: wx, worldZ: wz)
+                guard h > waterLevel + 1, h < 70 else { continue }
+                // ~4% столбцов получают дерево, детерминированно по координатам.
+                let r = hash(wx &* 7, wz &* 13) % 100
+                guard r < 4 else { continue }
+
+                let trunkHeight = 4 + Int(hash(wx, wz) % 3)   // 4..6
+                let top = h + trunkHeight
+                guard top + 2 < WorldConfig.chunkSizeY else { continue }
+
+                // Ствол
+                for y in (h + 1)...top {
+                    blocks.set(.wood, localX: lx, y: y, localZ: lz)
+                }
+                // Крона: сферообразная шапка из листвы
+                for dy in -2...2 {
+                    for dx in -2...2 {
+                        for dz in -2...2 {
+                            let dist = abs(dx) + abs(dy) + abs(dz)
+                            guard dist <= 3 else { continue }
+                            let cy = top + dy + 1
+                            let cxl = lx + dx
+                            let czl = lz + dz
+                            guard cxl >= 0, cxl < WorldConfig.chunkSizeX,
+                                  czl >= 0, czl < WorldConfig.chunkSizeZ,
+                                  cy >= 0, cy < WorldConfig.chunkSizeY else { continue }
+                            if blocks.block(localX: cxl, y: cy, localZ: czl) == .air {
+                                blocks.set(.leaves, localX: cxl, y: cy, localZ: czl)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
