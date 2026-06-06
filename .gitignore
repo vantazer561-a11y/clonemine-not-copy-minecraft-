@@ -1,0 +1,13 @@
+# Xcode / build
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+Payload/
+*.xcodeproj/
+
+# macOS
+.DS_Store
+
+# SPM
+.build/

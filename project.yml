@@ -1,0 +1,54 @@
+name: VoxelGame
+options:
+  bundleIdPrefix: com.clonemine
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  VoxelGame:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: CloneMine
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UIRequiredDeviceCapabilities:
+          - metal
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIStatusBarHidden: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.clonemine.voxelgame
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.0"
+
+  VoxelGameTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: VoxelGame
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.clonemine.voxelgame.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  VoxelGame:
+    build:
+      targets:
+        VoxelGame: all
+        VoxelGameTests: [test]
+    test:
+      targets:
+        - VoxelGameTests
